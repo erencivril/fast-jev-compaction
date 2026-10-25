@@ -102,7 +102,7 @@ put it in a source file.
 | --- | --- | --- |
 | `apiKey` | `TYPESAFE_API_KEY` | TypeSafe API key (`compactMessages`/`JevClient`) |
 | `model` | `jev-latest` | Jev model name |
-| `baseUrl` | `https://api.typesafe.ai/v1/systemone` | System One endpoint |
+| `baseUrl` | `https://openrouter.ai/api/v1/systemone` | System One endpoint (Jev through OpenRouter) |
 | `fetch` | native `fetch` | Injectable fetch implementation for tests |
 | `goal` | last 3 user prompts | Ongoing task description included in the state |
 | `keepThreshold` | `0.5` | Minimum keep probability for a call or result to stay |
@@ -161,6 +161,36 @@ could not remove enough (short sessions, or when it fails).
 To run from a checkout without installing: `CLAUDE_CODE_ENABLE_FUNCTION_HOOKS=1 claude --plugin-dir .`
 from the repository root. No publishing step is required; the marketplace is
 just the repo's `.claude-plugin/marketplace.json`.
+
+## OpenCode plugin
+
+`opencode/index.ts` is an OpenCode V2 (2.1+) server plugin over the same
+`src/`. It registers the session `compaction` hook: the Jev-pruned messages
+become the compaction's replacement window (`native.messages`), so OpenCode
+replays them verbatim instead of writing a summary. OpenCode's own system
+messages are never shown to Jev or removed. On errors or less than
+`minReductionRatio` reduction the hook leaves `result` unset and OpenCode
+summarizes as usual. Requests go to Jev through OpenRouter
+(`https://openrouter.ai/api/v1/systemone`) with an OpenRouter key.
+
+Add the directory to `plugins` in `~/.config/opencode/opencode.json`; the
+options are the Claude Code plugin's, plus `baseUrl`:
+
+```json
+{
+  "plugins": [
+    {
+      "package": "/path/to/fast-jev-compaction/opencode",
+      "options": { "apiKey": "{file:~/.config/opencode/openrouter.key}", "keepThreshold": 0.5 }
+    }
+  ]
+}
+```
+
+Without `apiKey` the key comes from `OPENROUTER_API_KEY`, then
+`TYPESAFE_API_KEY`. Compaction runs when OpenCode compacts (automatically near
+the context limit, see `compaction.buffer`, or on request); each completed
+compaction records the stats under `metadata.fastJevCompaction`.
 
 ## Development
 
