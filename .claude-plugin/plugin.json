@@ -6,8 +6,8 @@
   "userConfig": {
     "apiKey": {
       "type": "string",
-      "title": "TypeSafe API key",
-      "description": "TypeSafe API key. Leave unset to use TYPESAFE_API_KEY.",
+      "title": "OpenRouter API key",
+      "description": "OpenRouter API key for Jev. Leave unset to use TYPESAFE_API_KEY.",
       "sensitive": true
     },
     "keepThreshold": {
@@ -55,7 +55,7 @@
     "model": {
       "type": "string",
       "title": "Jev model",
-      "description": "TypeSafe Jev model name.",
+      "description": "Jev model name.",
       "default": "jev-latest"
     }
   }

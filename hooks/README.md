@@ -3,7 +3,7 @@
 This plugin uses Claude Code function hooks to replace a compaction with the
 original messages, minus the tool calls and tool results Jev judged no longer
 needed. `hooks/fast-jev.ts` is a thin adapter: it reads the plugin options,
-finds the TypeSafe key, hands `session.compact` transcripts to the
+finds the API key (an OpenRouter key in this fork), hands `session.compact` transcripts to the
 `fast-jev-compaction` library in `src/` (the plugin folder is the repository
 root, so the hook imports it directly) and maps the result back onto session
 messages. User and assistant text is never touched. Jev is sent the whole
@@ -29,9 +29,9 @@ hooks surface before installing or loading it:
 
 ```sh
 export CLAUDE_CODE_ENABLE_FUNCTION_HOOKS=1
-export TYPESAFE_API_KEY="<your TypeSafe key>"
+export TYPESAFE_API_KEY="<your OpenRouter key>"
 
-claude plugin marketplace add tamaratran/fast-jev-compaction
+claude plugin marketplace add erencivril/fast-jev-compaction
 claude plugin install fast-jev-compaction@fast-jev-compaction
 ```
 
@@ -57,7 +57,7 @@ The plugin declares these `userConfig` values in
 | `truncateHeadChars` | `300` |
 | `model` | `jev-latest` |
 
-The TypeSafe key can be supplied as the sensitive `apiKey` plugin option or
+The key (an OpenRouter key for this fork's OpenRouter endpoint) can be supplied as the sensitive `apiKey` plugin option or
 through `TYPESAFE_API_KEY`. The environment variable is the recommended
 development setup.
 

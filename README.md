@@ -1,9 +1,60 @@
-# fast-jev-compaction
+# fast-jev-compaction · OpenCode + OpenRouter fork
 
-Claude Code plugin that replaces the compaction summary with Jev decisions:
+Verbatim, Jev-guided context compaction for **OpenCode** and **Claude Code**:
 every tool call and result is scored in one fast request, stale ones are
-dropped or truncated, everything kept stays verbatim. Also usable as an npm
-library.
+dropped or truncated, everything kept stays verbatim. No summary is written.
+
+This is a fork of
+[tamaratran/fast-jev-compaction](https://github.com/tamaratran/fast-jev-compaction)
+(the Jev library and the Claude Code plugin). The fork adds:
+
+| | Upstream | This fork |
+| --- | --- | --- |
+| Claude Code plugin | ✓ | ✓ |
+| OpenCode V2 plugin (`opencode/`) | – | ✓ |
+| Jev endpoint | `api.typesafe.ai` with a TypeSafe key | `openrouter.ai/api/v1/systemone` with an **OpenRouter key** |
+
+Everything else (the library in `src/`, the decision rules, the options) is
+upstream's and is kept in sync with it.
+
+### Quick start
+
+You need an [OpenRouter](https://openrouter.ai/keys) API key. Keep it out of
+the repository and out of config files you share.
+
+**OpenCode** (2.1+): clone this repo, save the key to a file, and add the
+plugin directory to `~/.config/opencode/opencode.json`:
+
+```sh
+git clone https://github.com/erencivril/fast-jev-compaction
+printf '%s' 'sk-or-…' > ~/.config/opencode/openrouter.key
+```
+
+```json
+{
+  "plugins": [
+    {
+      "package": "/path/to/fast-jev-compaction/opencode",
+      "options": { "apiKey": "{file:~/.config/opencode/openrouter.key}" }
+    }
+  ]
+}
+```
+
+`opencode plugin list` should show `fast-jev-compaction`. See
+[OpenCode plugin](#opencode-plugin) for options and behavior.
+
+**Claude Code** (2.1.274+): set `CLAUDE_CODE_ENABLE_FUNCTION_HOOKS=1` and put
+the OpenRouter key in `TYPESAFE_API_KEY` (the variable keeps upstream's name),
+then install from this fork; see [Install in Claude Code](#install-in-claude-code).
+
+### Staying in sync with upstream
+
+```sh
+git remote add upstream https://github.com/tamaratran/fast-jev-compaction
+git pull upstream main
+npm test
+```
 
 ## What and why
 
@@ -63,6 +114,10 @@ npm install fast-jev-compaction
 export TYPESAFE_API_KEY=...
 ```
 
+The npm package is upstream's build and defaults to `api.typesafe.ai`. To use
+it with an OpenRouter key, pass `baseUrl: 'https://openrouter.ai/api/v1/systemone'`
+(this repo's `src/` already defaults to it).
+
 ```ts
 import { compactMessages, reductionRatio, type Message } from 'fast-jev-compaction';
 
@@ -100,7 +155,7 @@ put it in a source file.
 
 | Option | Default | Description |
 | --- | --- | --- |
-| `apiKey` | `TYPESAFE_API_KEY` | TypeSafe API key (`compactMessages`/`JevClient`) |
+| `apiKey` | `TYPESAFE_API_KEY` | API key for `baseUrl`: an OpenRouter key here, a TypeSafe key with upstream's endpoint |
 | `model` | `jev-latest` | Jev model name |
 | `baseUrl` | `https://openrouter.ai/api/v1/systemone` | System One endpoint (Jev through OpenRouter) |
 | `fetch` | native `fetch` | Injectable fetch implementation for tests |
@@ -139,14 +194,14 @@ Function hooks are an early-access Claude Code feature (2.1.274+), so the
 opt-in flag must be set wherever Claude Code runs, e.g. in `~/.claude/settings.json`:
 
 ```json
-{ "env": { "CLAUDE_CODE_ENABLE_FUNCTION_HOOKS": "1", "TYPESAFE_API_KEY": "<your key>" } }
+{ "env": { "CLAUDE_CODE_ENABLE_FUNCTION_HOOKS": "1", "TYPESAFE_API_KEY": "<your OpenRouter key>" } }
 ```
 
 Then add this repository as a plugin marketplace and install the plugin,
 either from the shell or as slash commands inside a session:
 
 ```sh
-claude plugin marketplace add tamaratran/fast-jev-compaction
+claude plugin marketplace add erencivril/fast-jev-compaction
 claude plugin install fast-jev-compaction@fast-jev-compaction
 ```
 
@@ -200,10 +255,10 @@ npm run typecheck        # library + hook
 npm test
 npm run build
 npm run validate:plugin  # claude plugin validate
-TYPESAFE_API_KEY="$(cat ~/.typesafe_key)" npm run demo
+TYPESAFE_API_KEY="$(cat ~/.config/opencode/openrouter.key)" npm run demo
 ```
 
-The unit tests use a fake Jev and never contact TypeSafe. The demo is the live
+The unit tests use a fake Jev and never contact Jev. The demo is the live
 network check.
 
 ## Animated demo (macOS)
